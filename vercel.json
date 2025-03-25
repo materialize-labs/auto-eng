@@ -1,7 +1,14 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "**",
+      "use": "@vercel/static"
+    }
+  ],
   "github": {
     "silent": true
   },
-  "cleanUrls": true
+  "cleanUrls": true,
+  "outputDirectory": "."
 } 
