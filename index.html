@@ -8,12 +8,14 @@ Changes:
 - Removed sidebar element
 - Removed favicon reference
 - Removed video overlay text
+- Integrated Dacast video embed
+- Improved responsive handling for mobile devices
 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Audi quattro® explained | Auto Shanghai 2025</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -34,9 +36,13 @@ Changes:
 
     <main>
         <div class="video-container">
-            <div class="video-placeholder">
-                <div class="video-bg"></div>
-                <!-- Video will be placed here -->
+            <div class="video-embed">
+                <script
+                    id="1d527128-5b17-0178-1c05-556990aed913-vod-0f01871e-f5b4-49da-b5a1-4a1944a78a04"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                    src="https://player.dacast.com/js/player.js?contentId=1d527128-5b17-0178-1c05-556990aed913-vod-0f01871e-f5b4-49da-b5a1-4a1944a78a04"
+                    class="dc-video">
+                </script>
             </div>
         </div>
     </main>
