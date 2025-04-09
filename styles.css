@@ -6,7 +6,27 @@ Changes:
 - Increased max-width to make content wider
 - Fixed responsive issues for mobile devices
 - Kept header on one row for all devices including mobile
+- Updated Audi red color to #F50537
+- Added Audi Type Extended font faces
+- Applied Audi Type Extended Bold to "Audi" text
+- Applied Audi Type Extended Normal to "quattro explained" and "Auto Shanghai 2025"
+- Reduced divider height from 3px to 1px
+- Made spacing above and below divider exactly equal at 20px
 */
+
+@font-face {
+    font-family: 'Audi Type Extended';
+    src: url('../fonts/AudiType-ExtendedNormal.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Audi Type Extended';
+    src: url('../fonts/AudiType-ExtendedBold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
 
 * {
     margin: 0;
@@ -33,7 +53,7 @@ header {
     justify-content: space-between;
     align-items: center;
     padding: 0 25px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     max-width: 1600px;
     margin-left: auto;
     margin-right: auto;
@@ -43,27 +63,29 @@ header {
 .logo {
     font-size: 1.1rem;
     font-weight: 500;
+    font-family: 'Audi Type Extended', sans-serif;
 }
 
 .audi-text {
-    color: #e30613; /* Audi red */
-    font-weight: 700;
+    color: #F50537; /* Audi red */
+    font-weight: bold;
 }
 
 .event {
     font-size: 1.1rem;
-    font-weight: 500;
+    font-weight: normal;
+    font-family: 'Audi Type Extended', sans-serif;
 }
 
 .divider-container {
     max-width: 1600px;
     width: 100%;
-    margin: 0 auto;
+    margin: 0 auto 10px auto;
     padding: 0 25px;
 }
 
 .divider {
-    height: 3px;
+    height: 2px;
     background-color: #333333;
     width: 100%;
 }
