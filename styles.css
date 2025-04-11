@@ -17,6 +17,7 @@ Changes:
 - Restructured header to include Chinese text
 - Reduced "Auto Shanghai 2025" font size
 - Overrode Dacast player background color to remove black borders
+- Adjusted video container width to match divider width on mobile
 */
 
 @font-face {
@@ -171,12 +172,22 @@ main {
         padding: 0 15px;
     }
     
+    main {
+        padding: 0 15px;
+    }
+    
+    .video-container {
+        width: 100%;
+        padding: 0;
+    }
+    
     .video-embed {
         min-width: 100%;
         min-height: auto;
         width: 100%;
         height: 0;
         padding-bottom: 56.25%;
+        border-radius: 4px;
     }
 }
 

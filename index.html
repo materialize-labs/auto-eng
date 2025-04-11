@@ -12,6 +12,7 @@ Changes:
 - Improved responsive handling for mobile devices
 - Added Chinese text "第二十一届上海国际汽车工业展览会" above "Auto Shanghai 2025"
 - Added JavaScript to force fullscreen when the video plays
+- Enhanced fullscreen code for iOS compatibility
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -52,8 +53,38 @@ Changes:
 
     <script>
         (function() {
+            // Detect iOS
+            const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            
             // Function to request fullscreen with browser-specific methods
             function requestFullscreen(element) {
+                // Use iOS-specific methods for video
+                if (iOS) {
+                    // Find the actual video element
+                    const videoEl = element.querySelector('video') || 
+                                   document.querySelector('.dacast-scope video');
+                    
+                    if (videoEl) {
+                        // iOS specific fullscreen methods
+                        if (videoEl.webkitEnterFullscreen) {
+                            videoEl.webkitEnterFullscreen();
+                            return true;
+                        } else if (videoEl.webkitRequestFullscreen) {
+                            videoEl.webkitRequestFullscreen();
+                            return true;
+                        }
+                    }
+                    
+                    // For iOS iframe players, try the webkit method on the iframe
+                    const iframe = element.querySelector('iframe');
+                    if (iframe && iframe.webkitRequestFullscreen) {
+                        iframe.webkitRequestFullscreen();
+                        return true;
+                    }
+                }
+                
+                // Standard approach for non-iOS devices
                 if (element.requestFullscreen) {
                     element.requestFullscreen();
                 } else if (element.webkitRequestFullscreen) {
@@ -64,32 +95,107 @@ Changes:
                     element.msRequestFullscreen();
                 }
             }
+            
+            // Create a fullscreen button overlay as a fallback
+            function createFullscreenButton() {
+                const button = document.createElement('button');
+                button.className = 'fullscreen-button';
+                button.textContent = 'Fullscreen';
+                button.style.position = 'absolute';
+                button.style.zIndex = '999999';
+                button.style.top = '50%';
+                button.style.left = '50%';
+                button.style.transform = 'translate(-50%, -50%)';
+                button.style.padding = '15px 30px';
+                button.style.background = 'rgba(0, 0, 0, 0.7)';
+                button.style.color = 'white';
+                button.style.border = 'none';
+                button.style.borderRadius = '5px';
+                button.style.fontSize = '16px';
+                button.style.cursor = 'pointer';
+                button.style.display = 'none';
+                
+                // For iOS, show the button if we detect playback without fullscreen
+                if (iOS) {
+                    setTimeout(() => {
+                        // Only show the button if the video is playing but not in fullscreen
+                        const videoElement = document.querySelector('.dacast-scope video');
+                        if (videoElement && !videoElement.paused && !document.fullscreenElement) {
+                            button.style.display = 'block';
+                        }
+                    }, 3000); // Give some time for playback to start
+                }
+                
+                button.addEventListener('click', function() {
+                    const playerContainer = document.getElementById('video-container');
+                    const videoElement = playerContainer.querySelector('video') || 
+                                        document.querySelector('.dacast-scope video');
+                    
+                    if (videoElement) {
+                        if (iOS && videoElement.webkitEnterFullscreen) {
+                            videoElement.webkitEnterFullscreen();
+                        } else {
+                            requestFullscreen(playerContainer);
+                        }
+                        button.style.display = 'none';
+                    }
+                });
+                
+                document.getElementById('video-container').appendChild(button);
+                return button;
+            }
 
             // Poll for Dacast player to be ready
             let checkInterval = setInterval(function() {
                 // Find video element once player is loaded
                 const playerContainer = document.getElementById('video-container');
                 const videoElement = playerContainer.querySelector('video') || 
-                                    playerContainer.querySelector('iframe') ||
                                     document.querySelector('.dacast-scope video') ||
                                     document.querySelector('.dacast-scope .dc-video-player-container');
                 
-                if (videoElement) {
+                if (videoElement || document.querySelector('.dacast-scope')) {
                     clearInterval(checkInterval);
+                    
+                    // Create fullscreen button as a fallback for iOS
+                    if (iOS) {
+                        const fullscreenButton = createFullscreenButton();
+                    }
                     
                     // Try to find play button if available
                     const playButton = document.querySelector('.dacast-scope .dc-svg-play-center-container') ||
                                      document.querySelector('.dacast-scope .dc-big-play-button') ||
                                      document.querySelector('.dacast-scope [class*="play"]');
                     
+                    // For iOS, immediately attach to the play button
+                    if (playButton && iOS) {
+                        playButton.addEventListener('click', function(e) {
+                            // For iOS, we need a small delay to allow video element to be created
+                            setTimeout(() => {
+                                const video = document.querySelector('.dacast-scope video');
+                                if (video && video.webkitEnterFullscreen) {
+                                    video.webkitEnterFullscreen();
+                                } else {
+                                    requestFullscreen(playerContainer);
+                                }
+                            }, 500);
+                        });
+                    }
+                    
                     // Override Dacast player to intercept play events
                     window.addEventListener('message', function(event) {
                         try {
                             const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                             if (data && (data.type === 'playing' || data.event === 'play' || data.action === 'play')) {
+                                // Find the video element again, as it might have been created after play
+                                const video = document.querySelector('.dacast-scope video');
+                                
                                 // Small delay to make sure playback has started
                                 setTimeout(() => {
-                                    requestFullscreen(videoElement.closest('.video-embed') || videoElement);
+                                    if (iOS && video && video.webkitEnterFullscreen) {
+                                        video.webkitEnterFullscreen();
+                                    } else {
+                                        requestFullscreen(playerContainer);
+                                    }
                                 }, 300);
                             }
                         } catch (e) {
@@ -98,19 +204,36 @@ Changes:
                     });
                     
                     // Alternative approach - listen for click on play button
-                    if (playButton) {
+                    if (playButton && !iOS) {
                         playButton.addEventListener('click', function() {
                             setTimeout(() => {
-                                requestFullscreen(videoElement.closest('.video-embed') || videoElement);
+                                requestFullscreen(playerContainer);
                             }, 300);
                         });
                     }
                     
                     // Also try to attach directly to video element
-                    if (videoElement.tagName === 'VIDEO') {
+                    if (videoElement && videoElement.tagName === 'VIDEO') {
                         videoElement.addEventListener('play', function() {
-                            requestFullscreen(videoElement.closest('.video-embed') || videoElement);
+                            if (iOS && videoElement.webkitEnterFullscreen) {
+                                videoElement.webkitEnterFullscreen();
+                            } else {
+                                requestFullscreen(playerContainer);
+                            }
                         });
+                    }
+                    
+                    // For iOS Safari, intercept all clicks on the player
+                    if (iOS) {
+                        document.querySelector('.dacast-scope').addEventListener('click', function() {
+                            // Small delay to allow video to start playing
+                            setTimeout(() => {
+                                const video = document.querySelector('.dacast-scope video');
+                                if (video && !video.paused && video.webkitEnterFullscreen) {
+                                    video.webkitEnterFullscreen();
+                                }
+                            }, 500);
+                        }, true);
                     }
                 }
             }, 500);
