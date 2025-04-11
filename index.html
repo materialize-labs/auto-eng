@@ -11,6 +11,7 @@ Changes:
 - Integrated Dacast video embed
 - Improved responsive handling for mobile devices
 - Added Chinese text "第二十一届上海国际汽车工业展览会" above "Auto Shanghai 2025"
+- Added JavaScript to force fullscreen when the video plays
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -38,7 +39,7 @@ Changes:
 
     <main>
         <div class="video-container">
-            <div class="video-embed">
+            <div class="video-embed" id="video-container">
                 <script
                     id="2f6fb61e-3747-9ae5-249e-cefb20fb6375-vod-f7beb8ee-dc1e-42a8-aac1-c4ddb785cefb"
                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
@@ -48,5 +49,77 @@ Changes:
             </div>
         </div>
     </main>
+
+    <script>
+        (function() {
+            // Function to request fullscreen with browser-specific methods
+            function requestFullscreen(element) {
+                if (element.requestFullscreen) {
+                    element.requestFullscreen();
+                } else if (element.webkitRequestFullscreen) {
+                    element.webkitRequestFullscreen();
+                } else if (element.mozRequestFullScreen) {
+                    element.mozRequestFullScreen();
+                } else if (element.msRequestFullscreen) {
+                    element.msRequestFullscreen();
+                }
+            }
+
+            // Poll for Dacast player to be ready
+            let checkInterval = setInterval(function() {
+                // Find video element once player is loaded
+                const playerContainer = document.getElementById('video-container');
+                const videoElement = playerContainer.querySelector('video') || 
+                                    playerContainer.querySelector('iframe') ||
+                                    document.querySelector('.dacast-scope video') ||
+                                    document.querySelector('.dacast-scope .dc-video-player-container');
+                
+                if (videoElement) {
+                    clearInterval(checkInterval);
+                    
+                    // Try to find play button if available
+                    const playButton = document.querySelector('.dacast-scope .dc-svg-play-center-container') ||
+                                     document.querySelector('.dacast-scope .dc-big-play-button') ||
+                                     document.querySelector('.dacast-scope [class*="play"]');
+                    
+                    // Override Dacast player to intercept play events
+                    window.addEventListener('message', function(event) {
+                        try {
+                            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                            if (data && (data.type === 'playing' || data.event === 'play' || data.action === 'play')) {
+                                // Small delay to make sure playback has started
+                                setTimeout(() => {
+                                    requestFullscreen(videoElement.closest('.video-embed') || videoElement);
+                                }, 300);
+                            }
+                        } catch (e) {
+                            // Silently catch JSON parsing errors
+                        }
+                    });
+                    
+                    // Alternative approach - listen for click on play button
+                    if (playButton) {
+                        playButton.addEventListener('click', function() {
+                            setTimeout(() => {
+                                requestFullscreen(videoElement.closest('.video-embed') || videoElement);
+                            }, 300);
+                        });
+                    }
+                    
+                    // Also try to attach directly to video element
+                    if (videoElement.tagName === 'VIDEO') {
+                        videoElement.addEventListener('play', function() {
+                            requestFullscreen(videoElement.closest('.video-embed') || videoElement);
+                        });
+                    }
+                }
+            }, 500);
+
+            // Fallback - if we failed to find the player after 10 seconds, stop checking
+            setTimeout(function() {
+                clearInterval(checkInterval);
+            }, 10000);
+        })();
+    </script>
 </body>
 </html> 
