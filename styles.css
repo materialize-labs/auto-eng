@@ -18,6 +18,7 @@ Changes:
 - Reduced "Auto Shanghai 2025" font size
 - Overrode Dacast player background color to remove black borders
 - Adjusted video container width to match divider width on mobile
+- Simplified video player controls on mobile to match desktop appearance
 */
 
 @font-face {
@@ -148,6 +149,31 @@ main {
 /* Override Dacast player background */
 .dacast-scope .dc-video-player-wrapper {
     background-color: transparent !important;
+}
+
+/* Simplify video controls for mobile/all devices */
+.dacast-scope .dc-bottom-controls-bar {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.dacast-scope .dc-settings-button,
+.dacast-scope .dc-chromecast-button,
+.dacast-scope .dc-pip-button,
+.dacast-scope .dc-volume-container,
+.dacast-scope .dc-fullscreen-button,
+.dacast-scope [class*="rewind"],
+.dacast-scope [class*="forward"],
+.dacast-scope .dc-time-display {
+    display: none !important;
+}
+
+/* Keep only the big center play button visible */
+.dacast-scope .dc-svg-play-center-container,
+.dacast-scope .dc-big-play-button {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 /* Mobile responsiveness */
