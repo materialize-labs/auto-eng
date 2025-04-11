@@ -16,6 +16,7 @@ Changes:
 - Added KingGothic font for Chinese text
 - Restructured header to include Chinese text
 - Reduced "Auto Shanghai 2025" font size
+- Overrode Dacast player background color to remove black borders
 */
 
 @font-face {
@@ -141,6 +142,11 @@ main {
     background-color: #f5f5f5;
     border-radius: 4px;
     overflow: hidden;
+}
+
+/* Override Dacast player background */
+.dacast-scope .dc-video-player-wrapper {
+    background-color: transparent !important;
 }
 
 /* Mobile responsiveness */
