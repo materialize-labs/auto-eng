@@ -19,6 +19,8 @@ Changes:
 - Overrode Dacast player background color to remove black borders
 - Adjusted video container width to match divider width on mobile
 - Simplified video player controls on mobile to match desktop appearance
+- Made Audi quattro and Chinese text top aligned
+- Further reduced divider thickness to better match Chinese font weight
 */
 
 @font-face {
@@ -65,7 +67,7 @@ header {
 .header-content {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 0 25px;
     margin-bottom: 20px;
     max-width: 1600px;
@@ -81,6 +83,7 @@ header {
     font-family: 'Audi Type Extended', sans-serif;
     display: flex;
     align-items: center;
+    padding-top: 4px;
 }
 
 .audi-text {
@@ -116,7 +119,7 @@ header {
 }
 
 .divider {
-    height: 2px;
+    height: 1px;
     background-color: #333333;
     width: 100%;
 }
