@@ -21,9 +21,7 @@ Changes:
 - Simplified video player controls on mobile to match desktop appearance
 - Made Audi quattro and Chinese text precisely top aligned
 - Further reduced divider thickness to better match Chinese font weight
-- Removed Dacast specific styles
-- Added styles for HTML5 video element and custom play button overlay
-- Ensured video container maintains aspect ratio
+- Improved header spacing on very small devices to prevent text overlap
 */
 
 @font-face {
@@ -206,30 +204,54 @@ main {
 /* Extra small devices */
 @media (max-width: 374px) {
     .logo {
-        font-size: 0.7rem;
+        font-size: 0.65rem; /* Further reduce font size */
         margin-top: 0;
         padding-top: 0;
         line-height: 1.2;
+        max-width: 45%; /* Limit width to prevent overlap */
     }
     
     .event-chinese {
-        font-size: 0.7rem;
+        font-size: 0.65rem; /* Reduce font size */
         margin-top: 0;
         padding-top: 0;
         line-height: 1.2;
     }
     
     .event {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
     }
     
     .header-content {
         padding: 0 10px;
         align-items: flex-start;
+        justify-content: space-between; /* Ensure elements stay at extremes */
+        gap: 10px; /* Add explicit gap between elements */
     }
     
     .divider-container {
         padding: 0 10px;
+    }
+}
+
+/* Even smaller devices (iPhone SE, etc.) */
+@media (max-width: 320px) {
+    .logo {
+        font-size: 0.6rem;
+        max-width: 40%; /* Further limit width on very small devices */
+    }
+    
+    .event-chinese {
+        font-size: 0.6rem;
+    }
+    
+    .event {
+        font-size: 0.5rem;
+    }
+    
+    .header-content {
+        padding: 0 6px;
+        gap: 6px; /* Smaller gap on very small screens */
     }
 }
 
