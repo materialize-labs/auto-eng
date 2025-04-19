@@ -32,4 +32,11 @@ yarn-error.log*
 
 # OS files
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Media files
+*.mp4
+*.mov
+*.avi
+*.wmv
+assets/*.mp4 
