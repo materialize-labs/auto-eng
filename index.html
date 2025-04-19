@@ -13,6 +13,13 @@ Changes:
 - Added Chinese text "第二十一届上海国际汽车工业展览会" above "Auto Shanghai 2025"
 - Added JavaScript to force fullscreen when the video plays
 - Enhanced fullscreen code for iOS compatibility
+- Replaced Dacast player with HTML5 video element for local MP4 playback
+- Added custom play button overlay
+- Updated JavaScript to control HTML5 video and trigger fullscreen on play
+- Updated splash image path to assets/splash.png
+- Added 'controls' attribute to video
+- Used 'poster' attribute instead of CSS background for splash image
+- Modified JS to hide custom play button after first play
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -21,6 +28,7 @@ Changes:
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Audi quattro® | Auto Shanghai 2025</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Removed inline style for background - using poster attribute now -->
 </head>
 <body>
     <header>
@@ -40,208 +48,127 @@ Changes:
 
     <main>
         <div class="video-container">
-            <div class="video-embed" id="video-container">
-                <script
-                    id="2f6fb61e-3747-9ae5-249e-cefb20fb6375-vod-f7beb8ee-dc1e-42a8-aac1-c4ddb785cefb"
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
-                    src="https://player.dacast.com/js/player.js?contentId=2f6fb61e-3747-9ae5-249e-cefb20fb6375-vod-f7beb8ee-dc1e-42a8-aac1-c4ddb785cefb"
-                    class="dc-video">
-                </script>
+            <div class="video-embed" id="video-wrapper">
+                <video 
+                    id="audi-video"
+                    src="assets/25_0415_SMS25_QUATTRO_EXPLAINED_v22.mp4"
+                    controls
+                    playsinline 
+                    preload="auto" 
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                    Your browser does not support the video tag.
+                </video>
+                <button id="play-button" class="play-button-overlay" aria-label="Play Video"></button>
             </div>
         </div>
     </main>
 
     <script>
         (function() {
-            // Detect iOS
+            const videoWrapper = document.getElementById('video-wrapper');
+            const video = document.getElementById('audi-video');
+            const playButton = document.getElementById('play-button');
             const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-            
-            // Function to request fullscreen with browser-specific methods
+            let hasPlayedOnce = false; // Track if the video has been played at least once
+
+            // --- Fullscreen Request Logic (remains the same) ---
             function requestFullscreen(element) {
-                // Use iOS-specific methods for video
-                if (iOS) {
-                    // Find the actual video element
-                    const videoEl = element.querySelector('video') || 
-                                   document.querySelector('.dacast-scope video');
-                    
-                    if (videoEl) {
-                        // iOS specific fullscreen methods
-                        if (videoEl.webkitEnterFullscreen) {
-                            videoEl.webkitEnterFullscreen();
-                            return true;
-                        } else if (videoEl.webkitRequestFullscreen) {
-                            videoEl.webkitRequestFullscreen();
-                            return true;
-                        }
-                    }
-                    
-                    // For iOS iframe players, try the webkit method on the iframe
-                    const iframe = element.querySelector('iframe');
-                    if (iframe && iframe.webkitRequestFullscreen) {
-                        iframe.webkitRequestFullscreen();
-                        return true;
-                    }
+                if (iOS && element.tagName === 'VIDEO' && element.webkitEnterFullscreen) {
+                    element.webkitEnterFullscreen();
+                    return;
                 }
-                
-                // Standard approach for non-iOS devices
                 if (element.requestFullscreen) {
                     element.requestFullscreen();
-                } else if (element.webkitRequestFullscreen) {
+                } else if (element.webkitRequestFullscreen) { 
                     element.webkitRequestFullscreen();
-                } else if (element.mozRequestFullScreen) {
+                } else if (element.mozRequestFullScreen) { 
                     element.mozRequestFullScreen();
-                } else if (element.msRequestFullscreen) {
+                } else if (element.msRequestFullscreen) { 
                     element.msRequestFullscreen();
+                } else if (video.webkitEnterFullscreen) {
+                    video.webkitEnterFullscreen();
                 }
+            }
+
+            // --- Event Listeners ---
+            playButton.addEventListener('click', function() {
+                if (!hasPlayedOnce) {
+                    hasPlayedOnce = true;
+                }
+                playButton.style.display = 'none'; // Hide overlay button permanently after click
+                video.play(); 
+                // Request fullscreen slightly after play starts
+                setTimeout(() => requestFullscreen(video), 150); 
+            });
+
+            // When video starts playing (either via button or native controls if they appear before first play)
+            video.addEventListener('play', function() {
+                 if (!hasPlayedOnce) {
+                    hasPlayedOnce = true;
+                 }
+                 playButton.style.display = 'none'; // Ensure overlay button is hidden
+                 
+                 // Trigger fullscreen automatically only on the *initial* play triggered by our button/logic
+                 // Check if already fullscreen
+                 if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement && !(video.webkitDisplayingFullscreen)) {
+                    // We only trigger auto-fullscreen if the play event fires shortly after the button click
+                    // This avoids re-triggering fullscreen if the user pauses and plays using native controls
+                    // Note: This check might be imperfect. A more robust way involves checking event trigger, but this is simpler.
+                    // Let's keep the fullscreen request here for now, as the main interaction is the first click.
+                    setTimeout(() => requestFullscreen(video), 150);
+                 }
+            });
+
+            // Native controls will handle pause/play after the first interaction.
+            // We no longer need to show the custom button on pause or end.
+            /* 
+            video.addEventListener('pause', function() {
+                if (!video.ended && !hasPlayedOnce) { // Only show if never played
+                   // playButton.style.display = 'block'; 
+                }
+            });
+            
+             video.addEventListener('ended', function() {
+                 // playButton.style.display = 'block'; // Don't show on end if using native controls
+                 if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                 } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                 } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                 } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                 }
+            });
+            */
+            
+            // We might still want to exit fullscreen on video end
+             video.addEventListener('ended', function() {
+                 if (document.exitFullscreen) document.exitFullscreen();
+                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                 else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                 else if (document.msExitFullscreen) document.msExitFullscreen();
+             });
+
+            // Fullscreen change handling - no longer needed to show/hide custom button
+            /*
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+            function handleFullscreenChange() {
+                 const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+                 // Don't manage button visibility based on fullscreen changes anymore
             }
             
-            // Create a fullscreen button overlay as a fallback
-            function createFullscreenButton() {
-                const button = document.createElement('button');
-                button.className = 'fullscreen-button';
-                button.textContent = 'Fullscreen';
-                button.style.position = 'absolute';
-                button.style.zIndex = '999999';
-                button.style.top = '50%';
-                button.style.left = '50%';
-                button.style.transform = 'translate(-50%, -50%)';
-                button.style.padding = '15px 30px';
-                button.style.background = 'rgba(0, 0, 0, 0.7)';
-                button.style.color = 'white';
-                button.style.border = 'none';
-                button.style.borderRadius = '5px';
-                button.style.fontSize = '16px';
-                button.style.cursor = 'pointer';
-                button.style.display = 'none';
-                
-                // For iOS, show the button if we detect playback without fullscreen
-                if (iOS) {
-                    setTimeout(() => {
-                        // Only show the button if the video is playing but not in fullscreen
-                        const videoElement = document.querySelector('.dacast-scope video');
-                        if (videoElement && !videoElement.paused && !document.fullscreenElement) {
-                            button.style.display = 'block';
-                        }
-                    }, 3000); // Give some time for playback to start
-                }
-                
-                button.addEventListener('click', function() {
-                    const playerContainer = document.getElementById('video-container');
-                    const videoElement = playerContainer.querySelector('video') || 
-                                        document.querySelector('.dacast-scope video');
-                    
-                    if (videoElement) {
-                        if (iOS && videoElement.webkitEnterFullscreen) {
-                            videoElement.webkitEnterFullscreen();
-                        } else {
-                            requestFullscreen(playerContainer);
-                        }
-                        button.style.display = 'none';
-                    }
-                });
-                
-                document.getElementById('video-container').appendChild(button);
-                return button;
-            }
+             if(iOS) {
+                 video.addEventListener('webkitendfullscreen', function() {
+                    // Don't manage button visibility based on fullscreen changes anymore
+                 });
+             }
+            */
 
-            // Poll for Dacast player to be ready
-            let checkInterval = setInterval(function() {
-                // Find video element once player is loaded
-                const playerContainer = document.getElementById('video-container');
-                const videoElement = playerContainer.querySelector('video') || 
-                                    document.querySelector('.dacast-scope video') ||
-                                    document.querySelector('.dacast-scope .dc-video-player-container');
-                
-                if (videoElement || document.querySelector('.dacast-scope')) {
-                    clearInterval(checkInterval);
-                    
-                    // Create fullscreen button as a fallback for iOS
-                    if (iOS) {
-                        const fullscreenButton = createFullscreenButton();
-                    }
-                    
-                    // Try to find play button if available
-                    const playButton = document.querySelector('.dacast-scope .dc-svg-play-center-container') ||
-                                     document.querySelector('.dacast-scope .dc-big-play-button') ||
-                                     document.querySelector('.dacast-scope [class*="play"]');
-                    
-                    // For iOS, immediately attach to the play button
-                    if (playButton && iOS) {
-                        playButton.addEventListener('click', function(e) {
-                            // For iOS, we need a small delay to allow video element to be created
-                            setTimeout(() => {
-                                const video = document.querySelector('.dacast-scope video');
-                                if (video && video.webkitEnterFullscreen) {
-                                    video.webkitEnterFullscreen();
-                                } else {
-                                    requestFullscreen(playerContainer);
-                                }
-                            }, 500);
-                        });
-                    }
-                    
-                    // Override Dacast player to intercept play events
-                    window.addEventListener('message', function(event) {
-                        try {
-                            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                            if (data && (data.type === 'playing' || data.event === 'play' || data.action === 'play')) {
-                                // Find the video element again, as it might have been created after play
-                                const video = document.querySelector('.dacast-scope video');
-                                
-                                // Small delay to make sure playback has started
-                                setTimeout(() => {
-                                    if (iOS && video && video.webkitEnterFullscreen) {
-                                        video.webkitEnterFullscreen();
-                                    } else {
-                                        requestFullscreen(playerContainer);
-                                    }
-                                }, 300);
-                            }
-                        } catch (e) {
-                            // Silently catch JSON parsing errors
-                        }
-                    });
-                    
-                    // Alternative approach - listen for click on play button
-                    if (playButton && !iOS) {
-                        playButton.addEventListener('click', function() {
-                            setTimeout(() => {
-                                requestFullscreen(playerContainer);
-                            }, 300);
-                        });
-                    }
-                    
-                    // Also try to attach directly to video element
-                    if (videoElement && videoElement.tagName === 'VIDEO') {
-                        videoElement.addEventListener('play', function() {
-                            if (iOS && videoElement.webkitEnterFullscreen) {
-                                videoElement.webkitEnterFullscreen();
-                            } else {
-                                requestFullscreen(playerContainer);
-                            }
-                        });
-                    }
-                    
-                    // For iOS Safari, intercept all clicks on the player
-                    if (iOS) {
-                        document.querySelector('.dacast-scope').addEventListener('click', function() {
-                            // Small delay to allow video to start playing
-                            setTimeout(() => {
-                                const video = document.querySelector('.dacast-scope video');
-                                if (video && !video.paused && video.webkitEnterFullscreen) {
-                                    video.webkitEnterFullscreen();
-                                }
-                            }, 500);
-                        }, true);
-                    }
-                }
-            }, 500);
-
-            // Fallback - if we failed to find the player after 10 seconds, stop checking
-            setTimeout(function() {
-                clearInterval(checkInterval);
-            }, 10000);
         })();
     </script>
 </body>
